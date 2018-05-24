@@ -1,0 +1,54 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+       xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+       xmlns:context="http://www.springframework.org/schema/context"
+       xmlns:mvc="http://www.springframework.org/schema/mvc"
+       xmlns:tx="http://www.springframework.org/schema/tx"
+       xsi:schemaLocation="http://www.springframework.org/schema/beans
+       http://www.springframework.org/schema/beans/spring-beans.xsd
+       http://www.springframework.org/schema/context
+       http://www.springframework.org/schema/context/spring-context.xsd
+       http://www.springframework.org/schema/tx
+       http://www.springframework.org/schema/tx/spring-tx.xsd
+       http://www.springframework.org/schema/mvc
+       http://www.springframework.org/schema/mvc/spring-mvc.xsd">
+    <!-- 开启自动扫描 对com.SSMTest包中的所有类进行扫描，以完成Bean创建和自动依赖注入的功能 -->
+    <context:component-scan base-package="com.SSMTest"/>
+    <!-- 开启SpringMVC注解模式 -->
+    <mvc:annotation-driven/>
+    <!-- 引入配置文件 配置数据库相关参数properties的属性：${url} -->
+    <context:property-placeholder location="classpath:jdbc.properties"/>
+    <!-- 数据库连接池 -->
+    <bean id="dataSource" class="org.apache.commons.dbcp.BasicDataSource">
+        <property name="driverClassName" value="${driver}"/>
+        <property name="url" value="${url}"/>
+        <property name="username" value="${jdbc.username}"/>
+        <property name="password" value="${password}"/>
+        <property name="initialSize" value="${initialSize}"/>
+        <property name="maxActive" value="${maxActive}"/>
+        <property name="maxIdle" value="${maxIdle}"/>
+        <property name="maxWait" value="${maxWait}"/>
+    </bean>
+    <!-- 配置sqlSessionFactory对象 -->
+    <bean id="sqlSessionFactory" class="org.mybatis.spring.SqlSessionFactoryBean">
+        <!-- 注入数据库连接池 -->
+        <property name="dataSource" ref="dataSource"/>
+        <!-- 扫描model包 -->
+        <property name="typeAliasesPackage" value="com.SSMTest.Model"/>
+        <!-- 扫描sql配置文件:mapper需要的xml文件 -->
+        <property name="mapperLocations" value="classpath:Mapper/*.xml"/>
+    </bean>
+    <!-- 配置扫描Dao接口包，动态实现Dao接口注入到spring容器中-->
+    <bean class="org.mybatis.spring.mapper.MapperScannerConfigurer">
+        <!-- 注入sqlSessionFactory -->
+        <property name="sqlSessionFactoryBeanName" value="sqlSessionFactory"/>
+        <!-- 给出需要扫描的包 -->
+        <property name="basePackage" value="com.SSMTest.Dao"/>
+    </bean>
+    <!-- 事物管理 -->
+    <bean id="txManager" class="org.springframework.jdbc.datasource.DataSourceTransactionManager">
+        <property name="dataSource" ref="dataSource"/>
+    </bean>
+    <!-- 配置基于注解的声明式事务 -->
+    <tx:annotation-driven transaction-manager="txManager"/>
+</beans>
